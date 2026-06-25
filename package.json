@@ -12,7 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@clerk/express": "^2.1.31"
+    "@clerk/express": "^2.1.31",
+    "cors": "^2.8.6"
   },
   "devDependencies": {
     "@prisma/client": "^6.19.3",

@@ -1,7 +1,9 @@
-import "dotenv";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 import express from "express";
 import cors from "cors";
-import { clerkMiddleware, requireAuth } from "@clerk/express";
+import { clerkMiddleware, getAuth } from "@clerk/express";
 import todoRoutes from "./routes/todos.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -10,19 +12,26 @@ dotenv.config({ path: resolve(__dirname, "../.env") });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// This is to enable CORS for the frontend
+// This enables CORS for the frontend
 app.use(cors({ origin: "http://localhost:5173" }));
-// This is to enable JSON parsing for all routes
+// This enables JSON parsing for all routes
 app.use(express.json());
-// This is to enable the clerk middleware for all routes
+// This enables Clerk's auth middleware for all routes
 app.use(clerkMiddleware());
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-// This is to enable the todo routes, protected by clerk auth
-app.use("/todos", requireAuth(), todoRoutes);
+// This protects all todo routes by checking if the user is authenticated
+const protect = (req, res, next) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  next();
+};
+
+// This applies the protect middleware to all todo routes
+app.use("/todos", protect, todoRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
